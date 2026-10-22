@@ -162,10 +162,10 @@
                 <h3 class="section-title">Добави спомен</h3>
                 <button type="button" id="home-form-back" class="ghost tiny"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M15 18l-6-6 6-6"/></svg> Назад</button>
               </div>
-              <form id="memory-form" class="stacked-form">
+              <form id="memory-form" class="stacked-form keepsake-form">
                 <label>
                   Заглавие <span class="required-mark">*</span>
-                  <input type="text" id="memory-title" placeholder="Кратко заглавие на спомена" required />
+                  <input type="text" id="memory-title" class="input-title" placeholder="Кратко заглавие на спомена" required />
                 </label>
 
                 <label>
@@ -222,7 +222,7 @@
                   <small id="memory-pin-coords" class="hint">Няма избрани места.</small>
                 </div>
 
-                <label>
+                <label class="upload-tile">
                   Снимки / Видео <span class="field-hint">(опционално)</span>
                   <input type="file" id="memory-media" accept="image/*,video/*" multiple />
                 </label>
@@ -393,11 +393,11 @@
 
           <!-- Edit mode -->
           <div id="detail-edit" class="hidden">
-            <form id="detail-edit-form" class="stacked-form detail-edit-form">
+            <form id="detail-edit-form" class="stacked-form detail-edit-form keepsake-form">
 
               <label>
                 Заглавие <span class="required-mark">*</span>
-                <input type="text" id="edit-title" placeholder="Кратко заглавие на спомена" />
+                <input type="text" id="edit-title" class="input-title" placeholder="Кратко заглавие на спомена" />
               </label>
 
               <label>
@@ -462,7 +462,7 @@
               <div class="edit-photos-section">
                 <p class="detail-section-label">Снимки <span class="field-hint">(избери корица)</span></p>
                 <div id="edit-photo-strip" class="media-preview-grid"></div>
-                <label style="margin-top:8px">
+                <label class="upload-tile" style="margin-top:8px">
                   Добави нови снимки
                   <input type="file" id="edit-media" accept="image/*" multiple />
                 </label>

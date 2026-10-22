@@ -371,6 +371,41 @@ label {
   color: var(--text-secondary);
 }
 
+/* ── KEEPSAKE FORM (create/edit memory only, scoped) ───────────── */
+
+.keepsake-form > label {
+  border-bottom: 1px solid var(--line);
+  padding: 15px 0;
+  gap: 6px;
+}
+
+.keepsake-form > label:first-child {
+  padding-top: 0;
+}
+
+.input-title {
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  color: var(--text-primary);
+}
+
+.input-title:focus {
+  box-shadow: none !important;
+}
+
+.keepsake-form label.upload-tile {
+  border: 1.6px dashed var(--disabled);
+  border-radius: 18px;
+  background: #fff;
+  padding: 16px;
+  text-align: center;
+  color: var(--teal-deep);
+  font: 600 0.8rem var(--font-ui);
+}
+
 .field-hint {
   font-weight: 400;
   font-size: 0.78rem;
@@ -429,7 +464,9 @@ button:active {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #3ECab8, #2BB0A0);
+  height: 56px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, var(--teal-light), var(--teal-dark));
   box-shadow: 0 6px 18px rgba(43, 176, 160, 0.38);
 }
 
