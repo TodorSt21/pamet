@@ -78,6 +78,11 @@ const editTags = document.querySelector('#edit-tags');
 const editActivityTags = document.querySelector('#edit-activity-tags');
 const editEmotionTags = document.querySelector('#edit-emotion-tags');
 const editNotesArea = document.querySelector('#edit-notes');
+const editMilestoneToggle = document.querySelector('#edit-milestone-toggle');
+const editEmotionChipsEl = document.querySelector('#edit-emotion-chips');
+const memoryMilestoneToggle = document.querySelector('#memory-milestone-toggle');
+const memoryEmotionChipsEl = document.querySelector('#memory-emotion-chips');
+const memoryEmotionTagsInput = document.querySelector('#memory-emotion-tags');
 const editTitleInput = document.querySelector('#edit-title');
 const editPhotoStripEl = document.querySelector('#edit-photo-strip');
 const editMediaInput = document.querySelector('#edit-media');
@@ -202,6 +207,7 @@ function mapMemory(row) {
     notes: row.notes || '',
     pins: normalizePins(row.pin),
     tags: normalizeTagGroups(row.tags),
+    isMilestone: Boolean(row.is_milestone),
     mediaDataUrls: media.map((m) => memPhotoUrl(m.storage_path)),
     mediaPaths: media.map((m) => m.storage_path),
     mediaCount: media.length,
@@ -471,6 +477,54 @@ function parseTagInput(raw) {
   return [...new Set(raw.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean))];
 }
 
+// ── Milestone toggle + "How did it feel?" emotion chips (Step 6) ──────
+
+function setToggleState(toggleEl, isOn) {
+  if (!toggleEl) return;
+  toggleEl.classList.toggle('is-on', isOn);
+  toggleEl.setAttribute('aria-checked', String(isOn));
+}
+
+function wireToggle(toggleEl) {
+  if (!toggleEl) return;
+  const flip = () => setToggleState(toggleEl, !toggleEl.classList.contains('is-on'));
+  toggleEl.addEventListener('click', flip);
+  toggleEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); }
+  });
+}
+
+const EMOTION_CHIP_LABELS = ['Горд', 'Благодарен', 'Радостен', 'Носталгичен'];
+
+function renderEmotionChips(inputEl, chipsEl) {
+  if (!chipsEl || !inputEl) return;
+  chipsEl.innerHTML = '';
+  const current = parseTagInput(inputEl.value);
+  EMOTION_CHIP_LABELS.forEach((label) => {
+    const key = label.toLowerCase();
+    const li = document.createElement('li');
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'chip' + (current.includes(key) ? ' is-active' : '');
+    btn.textContent = label;
+    btn.addEventListener('click', () => {
+      const values = parseTagInput(inputEl.value);
+      const idx = values.indexOf(key);
+      if (idx === -1) values.push(key); else values.splice(idx, 1);
+      inputEl.value = values.join(', ');
+      renderEmotionChips(inputEl, chipsEl);
+    });
+    li.appendChild(btn);
+    chipsEl.appendChild(li);
+  });
+}
+
+wireToggle(memoryMilestoneToggle);
+wireToggle(editMilestoneToggle);
+renderEmotionChips(memoryEmotionTagsInput, memoryEmotionChipsEl);
+memoryEmotionTagsInput?.addEventListener('input', () => renderEmotionChips(memoryEmotionTagsInput, memoryEmotionChipsEl));
+editEmotionTags?.addEventListener('input', () => renderEmotionChips(editEmotionTags, editEmotionChipsEl));
+
 function parsePeople(raw) {
   return [...new Set((raw || '').split(',').map((s) => s.trim()).filter(Boolean))];
 }
@@ -533,6 +587,15 @@ function getMemoryCover(memory) {
   if (personPhoto) return personPhoto;
   const [from, to] = PH_GRADIENTS[hashString(String(memory.createdAt || memory.text || '')) % PH_GRADIENTS.length];
   return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="460"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="%23${from}"/><stop offset="1" stop-color="%23${to}"/></linearGradient></defs><rect width="100%25" height="100%25" fill="url(%23g)"/></svg>`;
+}
+
+// Adds the gold "Забележителен" badge over a cloned memory-card's photo.
+function addMilestoneBadge(cardFragmentOrEl, memory) {
+  if (!memory.isMilestone) return;
+  const badge = document.createElement('span');
+  badge.className = 'milestone-badge';
+  badge.innerHTML = `${ICON.star} Забележителен`;
+  cardFragmentOrEl.querySelector('.memory-photo')?.insertAdjacentElement('afterend', badge);
 }
 
 function toEventDateTimestamp(memory) {
@@ -606,6 +669,7 @@ function renderHomeSummary() {
       clone.querySelector('.memory-photo').src = getMemoryCover(memory);
       clone.querySelector('.event-date').textContent = formatEventDate(memory.eventDate);
       clone.querySelector('.text').textContent = memory.title || memory.text;
+      addMilestoneBadge(clone, memory);
 
       const locationEl = clone.querySelector('.location');
       if (memory.location) locationEl.innerHTML = `${ICON.pin} ${escHtml(memory.location)}`;
@@ -1341,12 +1405,7 @@ function renderTimeline() {
     clone.querySelector('.event-date').textContent = `🗓️ ${formatEventDate(memory.eventDate)}`;
     clone.querySelector('.text').textContent = memory.title || memory.text;
 
-    if (memory.isMilestone) {
-      const badge = document.createElement('span');
-      badge.className = 'milestone-badge';
-      badge.innerHTML = `${ICON.star} Забележителен`;
-      clone.querySelector('.memory-photo')?.insertAdjacentElement('afterend', badge);
-    }
+    addMilestoneBadge(clone, memory);
 
     const locationEl = clone.querySelector('.location');
     if (memory.location) locationEl.innerHTML = `${ICON.pin} ${escHtml(memory.location)}`;
@@ -1946,6 +2005,8 @@ function enterEditMode() {
   editActivityTags.value = (memory.tags?.activity || []).join(', ');
   editEmotionTags.value = (memory.tags?.emotion || []).join(', ');
   editNotesArea.value = memory.notes || '';
+  setToggleState(editMilestoneToggle, Boolean(memory.isMilestone));
+  renderEmotionChips(editEmotionTags, editEmotionChipsEl);
 
   // Restore location fields from memory.pins
   editLocationFields = (memory.pins && memory.pins.length)
@@ -2036,6 +2097,7 @@ detailEditForm.addEventListener('submit', async (event) => {
     activity: parseTagInput(editActivityTags.value),
     emotion: parseTagInput(editEmotionTags.value),
   };
+  const newIsMilestone = Boolean(editMilestoneToggle?.classList.contains('is-on'));
 
   // Update memory row in Supabase
   const { error: updateError } = await sb.from('memories').update({
@@ -2048,6 +2110,7 @@ detailEditForm.addEventListener('submit', async (event) => {
     notes: newNotes,
     pin: editPinsForSave.length ? editPinsForSave : null,
     tags: newTags,
+    is_milestone: newIsMilestone,
   }).eq('id', memoryId).eq('user_id', appState.userId);
 
   if (updateError) {
@@ -2113,6 +2176,7 @@ detailEditForm.addEventListener('submit', async (event) => {
       notes: newNotes,
       pin: editPinsForSave.length ? editPinsForSave : null,
       tags: newTags,
+      is_milestone: newIsMilestone,
       memory_media: finalMedia,
     });
   }
@@ -2472,6 +2536,7 @@ memoryForm.addEventListener('submit', async (event) => {
     notes: '',
     tags: { general: generalTags, activity: activityTags, emotion: emotionTags },
     pin: locationPinsForSave.length ? locationPinsForSave : null,
+    is_milestone: Boolean(memoryMilestoneToggle?.classList.contains('is-on')),
   }).select().single();
 
   if (error) {
@@ -2509,6 +2574,8 @@ memoryForm.addEventListener('submit', async (event) => {
   if (document.querySelector('#memory-title')) document.querySelector('#memory-title').value = '';
   renderMediaPreview();
   document.querySelector('#memory-event-date').value = new Date().toISOString().slice(0, 10);
+  setToggleState(memoryMilestoneToggle, false);
+  renderEmotionChips(memoryEmotionTagsInput, memoryEmotionChipsEl);
   submitBtn.disabled = false;
   submitBtn.textContent = 'Запази спомен';
 });

@@ -21,8 +21,14 @@ CREATE TABLE IF NOT EXISTS public.memories (
   notes       TEXT DEFAULT '',
   pin         JSONB,
   tags        JSONB DEFAULT '{"general":[],"activity":[],"emotion":[]}'::jsonb,
+  is_milestone BOOLEAN DEFAULT false,
   created_at  TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Safe to re-run: adds the column to a memories table that already
+-- existed before is_milestone was introduced (CREATE TABLE IF NOT
+-- EXISTS above is a no-op on an existing table).
+ALTER TABLE public.memories ADD COLUMN IF NOT EXISTS is_milestone BOOLEAN DEFAULT false;
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.memories TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.memories TO service_role;
