@@ -406,6 +406,42 @@ button.tiny {
   margin-bottom: 12px;
 }
 
+/* ── FILTER CHIPS (Keepsake .chip) ──────────────────────────────── */
+
+.chips {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.timeline-chips {
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  padding-bottom: 2px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chip {
+  flex: none;
+  font: 500 13px var(--font-ui);
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 8px 15px;
+  border-radius: var(--r-pill);
+  cursor: pointer;
+}
+
+.chip.is-active {
+  font-weight: 600;
+  color: #fff;
+  background: var(--teal);
+  border-color: var(--teal);
+}
+
 .search-wrap input[type="search"] {
   width: 100%;
   padding: 10px 36px 10px 12px;
@@ -437,8 +473,7 @@ button.tiny {
 }
 
 .timeline-list {
-  border-left: 2px solid rgba(47, 182, 166, 0.25);
-  padding-left: 10px;
+  padding-left: 0;
 }
 
 .timeline-group-label {
@@ -447,11 +482,59 @@ button.tiny {
   font-weight: 700;
   padding: 4px 0;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-family: 'DM Sans', system-ui, sans-serif;
+  letter-spacing: 0.14em;
+  font-family: var(--font-ui);
+  margin-left: 26px;
+}
+
+/* ── TIMELINE RAIL (dot + connecting line per memory) ──────────── */
+
+.timeline-row {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.timeline-rail {
+  flex: 0 0 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 18px;
+}
+
+.timeline-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--teal);
+  box-shadow: 0 0 0 4px rgba(47, 182, 166, 0.16);
+  flex: none;
+}
+
+.timeline-dot--milestone {
+  background: var(--gold);
+  box-shadow: 0 0 0 4px rgba(201, 146, 62, 0.18);
+}
+
+.timeline-line {
+  width: 2px;
+  flex: 1;
+  background: var(--line);
+  margin-top: 4px;
+}
+
+.timeline-row:last-child .timeline-line {
+  display: none;
+}
+
+.timeline-row {
+  margin-bottom: 14px;
 }
 
 .memory-item {
+  flex: 1;
+  min-width: 0;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
@@ -462,6 +545,7 @@ button.tiny {
 }
 
 .memory-card {
+  position: relative;
   padding: 0;
   overflow: hidden;
 }
@@ -471,6 +555,26 @@ button.tiny {
   height: 160px;
   object-fit: cover;
   display: block;
+}
+
+.milestone-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: 600 11px var(--font-ui);
+  padding: 5px 10px;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--gold-ink);
+  box-shadow: 0 4px 10px -4px rgba(0, 0, 0, 0.3);
+}
+
+.milestone-badge svg {
+  width: 12px;
+  height: 12px;
 }
 
 .memory-card-body {

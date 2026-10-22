@@ -15,6 +15,7 @@ const panels = [...document.querySelectorAll('.tab-panel')];
 const memoryForm = document.querySelector('#memory-form');
 const peopleForm = document.querySelector('#people-form');
 const timelineList = document.querySelector('#timeline-list');
+const timelineChipsEl = document.querySelector('#timeline-chips');
 const peopleList = document.querySelector('#people-list');
 const peopleOverviewCard = document.querySelector('#people-overview-card');
 const personDetailCard = document.querySelector('#person-detail-card');
@@ -141,6 +142,7 @@ let appState = {
   memories: [],
   people: [],
   activeTag: null,
+  milestoneFilter: false,
   locationFields: [emptyLocationField()],
   activeLocationIndex: 0,
   selectedPerson: null,
@@ -505,11 +507,31 @@ function formatEventDate(dateValue) {
 }
 
 
+// Mirrors the --ph-* gradient tokens in styles/design-system.css (a data-URI
+// SVG can't read the host page's CSS variables, so the stops are duplicated
+// here) to give photo-less memories a varied warm placeholder instead of
+// always the same teal swatch.
+const PH_GRADIENTS = [
+  ['f1e4d0', 'e0c39d'], // sand
+  ['cfe9e4', '82c6ba'], // sea
+  ['f1dcd4', 'd8aea4'], // rose
+  ['a6c4d8', '7fa6c0'], // sky
+  ['e3dcec', 'b8aacf'], // lilac
+  ['dfe7d3', 'b4c79b'], // sage
+];
+
+function hashString(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
 function getMemoryCover(memory) {
   if (memory.mediaDataUrls && memory.mediaDataUrls.length > 0) return memory.mediaDataUrls[0];
   const personPhoto = memory.persons.length ? getPersonPhoto(memory.persons[0]) : '';
   if (personPhoto) return personPhoto;
-  return 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="460"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="%233ECab8"/><stop offset="1" stop-color="%232BB0A0"/></linearGradient></defs><rect width="100%25" height="100%25" fill="url(%23g)"/><text x="50%25" y="52%25" font-size="42" text-anchor="middle" fill="white" font-family="DM Sans,Arial,sans-serif">Памет</text></svg>';
+  const [from, to] = PH_GRADIENTS[hashString(String(memory.createdAt || memory.text || '')) % PH_GRADIENTS.length];
+  return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="460"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="%23${from}"/><stop offset="1" stop-color="%23${to}"/></linearGradient></defs><rect width="100%25" height="100%25" fill="url(%23g)"/></svg>`;
 }
 
 function toEventDateTimestamp(memory) {
@@ -1057,6 +1079,10 @@ function passesTagFilter(memory) {
   return memory.tags[appState.activeTag.type].includes(appState.activeTag.value);
 }
 
+function passesMilestoneFilter(memory) {
+  return !appState.milestoneFilter || memory.isMilestone;
+}
+
 function passesSearchFilter(memory) {
   if (!searchQuery) return true;
   const q = searchQuery.toLowerCase();
@@ -1135,11 +1161,52 @@ function renderPersonDetail() {
   }
 }
 
+function renderTimelineChips() {
+  if (!timelineChipsEl) return;
+  timelineChipsEl.innerHTML = '';
+
+  const makeChip = (label, isActive, onClick) => {
+    const li = document.createElement('li');
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'chip' + (isActive ? ' is-active' : '');
+    btn.textContent = label;
+    btn.addEventListener('click', onClick);
+    li.appendChild(btn);
+    timelineChipsEl.appendChild(li);
+  };
+
+  makeChip('Всички', !appState.activeTag && !appState.milestoneFilter, () => {
+    appState.activeTag = null;
+    appState.milestoneFilter = false;
+    render();
+  });
+
+  makeChip('Забележителни', appState.milestoneFilter, () => {
+    appState.milestoneFilter = !appState.milestoneFilter;
+    render();
+  });
+
+  const seen = new Set();
+  appState.memories.flatMap(buildTagEntries).forEach((entry) => {
+    const key = `${entry.type}:${entry.value}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    const isActive = appState.activeTag && appState.activeTag.type === entry.type && appState.activeTag.value === entry.value;
+    makeChip(entry.value, isActive, () => {
+      appState.activeTag = isActive ? null : entry;
+      render();
+    });
+  });
+}
+
 function renderTimeline() {
+  renderTimelineChips();
   timelineList.innerHTML = '';
   const sortedMemories = [...appState.memories]
     .sort((a, b) => toEventDateTimestamp(a) - toEventDateTimestamp(b))
     .filter(passesTagFilter)
+    .filter(passesMilestoneFilter)
     .filter(passesSearchFilter);
   let lastGroup = '';
 
@@ -1147,7 +1214,7 @@ function renderTimeline() {
     const currentGroup = monthLabel(memory.eventDate);
     if (currentGroup != lastGroup) {
       const groupLabel = document.createElement('li');
-      groupLabel.className = 'timeline-group-label';
+      groupLabel.className = 'timeline-group-label t-eyebrow';
       groupLabel.textContent = currentGroup;
       timelineList.appendChild(groupLabel);
       lastGroup = currentGroup;
@@ -1157,6 +1224,13 @@ function renderTimeline() {
     clone.querySelector('.memory-photo').src = getMemoryCover(memory);
     clone.querySelector('.event-date').textContent = `🗓️ ${formatEventDate(memory.eventDate)}`;
     clone.querySelector('.text').textContent = memory.title || memory.text;
+
+    if (memory.isMilestone) {
+      const badge = document.createElement('span');
+      badge.className = 'milestone-badge';
+      badge.innerHTML = `${ICON.star} Забележителен`;
+      clone.querySelector('.memory-photo')?.insertAdjacentElement('afterend', badge);
+    }
 
     const locationEl = clone.querySelector('.location');
     if (memory.location) locationEl.innerHTML = `${ICON.pin} ${escHtml(memory.location)}`;
@@ -1203,7 +1277,18 @@ function renderTimeline() {
       openMemoryDetail(memory.createdAt);
     });
 
-    timelineList.appendChild(clone);
+    const row = document.createElement('li');
+    row.className = 'timeline-row';
+    const rail = document.createElement('div');
+    rail.className = 'timeline-rail';
+    const dot = document.createElement('span');
+    dot.className = 'timeline-dot' + (memory.isMilestone ? ' timeline-dot--milestone' : '');
+    const line = document.createElement('span');
+    line.className = 'timeline-line';
+    rail.append(dot, line);
+    row.appendChild(rail);
+    row.appendChild(cardItem);
+    timelineList.appendChild(row);
   });
 
   if (!sortedMemories.length) {
