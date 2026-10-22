@@ -143,6 +143,7 @@ let appState = {
   people: [],
   activeTag: null,
   milestoneFilter: false,
+  albumFilter: null,
   locationFields: [emptyLocationField()],
   activeLocationIndex: 0,
   selectedPerson: null,
@@ -635,18 +636,24 @@ function yearsAgoLabel(years) {
   return `преди ${years} години`;
 }
 
-function renderOnThisDay() {
-  if (!onThisDayBody) return;
-
+// Shared by the home "На този ден" card and the Profile screen's
+// "На този ден" row, so both reuse the exact same matching logic.
+function getOnThisDayMatches() {
   const today = new Date();
   const todayMonth = today.getMonth();
   const todayDay = today.getDate();
   const thisYear = today.getFullYear();
 
-  const matches = appState.memories.filter((memory) => {
+  return appState.memories.filter((memory) => {
     const d = new Date(memory.eventDate);
     return d.getMonth() === todayMonth && d.getDate() === todayDay && d.getFullYear() < thisYear;
   }).sort((a, b) => toEventDateTimestamp(b) - toEventDateTimestamp(a));
+}
+
+function renderOnThisDay() {
+  if (!onThisDayBody) return;
+
+  const matches = getOnThisDayMatches();
 
   onThisDayBody.innerHTML = '';
 
@@ -1008,6 +1015,99 @@ function groupPinsByPlace() {
   return [...groups.values()].sort((a, b) => b.count - a.count);
 }
 
+// ── Albums (Step 4) — derived purely from existing tags/dates/people,
+// no new table. Each album carries a `test(memory)` predicate reused
+// both to count members and to filter the timeline when opened.
+function computeAlbums() {
+  const thisYear = new Date().getFullYear();
+
+  const isTravel = (m) => m.tags.general.includes('пътуване') || Boolean(m.location) || m.pins.length > 0;
+  const isFamily = (m) => m.persons.length > 0;
+  const isMilestone = (m) => Boolean(m.isMilestone);
+  const isThisYear = (m) => new Date(m.eventDate).getFullYear() === thisYear;
+  const isEveryday = (m) => !isMilestone(m) && !isFamily(m) && !isTravel(m);
+
+  const defs = [
+    { key: 'family', name: 'Семейство', test: isFamily },
+    { key: 'travels', name: 'Пътувания', test: isTravel },
+    { key: 'milestones', name: 'Забележителни', test: isMilestone },
+    { key: 'everyday', name: 'Всекидневие', test: isEveryday },
+    { key: 'this-year', name: `Тази година (${thisYear})`, test: isThisYear },
+  ];
+
+  return defs.map((def) => {
+    const members = appState.memories.filter(def.test);
+    return { ...def, count: members.length, cover: members[0] ? getMemoryCover(members[0]) : null };
+  });
+}
+
+function renderAlbums() {
+  const grid = document.querySelector('#album-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  computeAlbums().forEach((album) => {
+    const card = document.createElement('div');
+    card.className = 'album-card';
+
+    const cover = document.createElement('div');
+    cover.className = 'album__cover';
+    cover.style.background = album.cover ? `url('${album.cover}') center/cover` : 'var(--ph-stripe), var(--ph-lilac)';
+
+    const name = document.createElement('p');
+    name.className = 'album__name';
+    name.textContent = album.name;
+
+    const count = document.createElement('p');
+    count.className = 'album__count';
+    count.textContent = `${album.count} ${pluralMemories(album.count)}`;
+
+    card.append(cover, name, count);
+    card.addEventListener('click', () => {
+      openTimelineFiltered(
+        album.key === 'milestones'
+          ? { milestoneFilter: true }
+          : { albumFilter: { key: album.key, test: album.test } },
+      );
+    });
+    grid.appendChild(card);
+  });
+}
+
+function renderProfile() {
+  const nameEl = document.querySelector('#profile-name');
+  if (!nameEl) return;
+
+  nameEl.textContent = appState.user ? appState.user.split('@')[0] : 'Приятел';
+
+  const years = appState.memories.map((m) => new Date(m.eventDate).getFullYear()).filter(Number.isFinite);
+  const sinceYear = years.length ? Math.min(...years) : new Date().getFullYear();
+  document.querySelector('#profile-since').textContent = `Помни от ${sinceYear}`;
+
+  const uniquePeople = new Set(appState.people.map((p) => p.name.trim().toLowerCase()).filter(Boolean));
+  appState.memories.forEach((m) => m.persons.forEach((name) => uniquePeople.add(name.trim().toLowerCase())));
+  const uniquePlaces = new Set(groupPinsByPlace().map((p) => p.name.toLowerCase()));
+  const uniqueYears = new Set(years);
+
+  const statsEl = document.querySelector('#profile-stats');
+  statsEl.innerHTML = '';
+  [
+    ['Спомени', appState.memories.length],
+    ['Хора', uniquePeople.size],
+    ['Места', uniquePlaces.size],
+    ['Години', uniqueYears.size],
+  ].forEach(([label, value]) => {
+    const stat = document.createElement('div');
+    stat.className = 'stat';
+    stat.innerHTML = `<div class="stat__value">${value}</div><div class="stat__label">${escHtml(label)}</div>`;
+    statsEl.appendChild(stat);
+  });
+
+  const milestoneCount = appState.memories.filter((m) => m.isMilestone).length;
+  document.querySelector('#profile-favorites-count').textContent = `${milestoneCount}`;
+  document.querySelector('#profile-on-this-day-count').textContent = `${getOnThisDayMatches().length}`;
+}
+
 function renderMapPins() {
   mapPinsList.innerHTML = '';
   const flatPins = appState.memories.flatMap((memory) => memory.pins.map((pin) => ({ memory, pin })));
@@ -1081,6 +1181,18 @@ function passesTagFilter(memory) {
 
 function passesMilestoneFilter(memory) {
   return !appState.milestoneFilter || memory.isMilestone;
+}
+
+function passesAlbumFilter(memory) {
+  return !appState.albumFilter || appState.albumFilter.test(memory);
+}
+
+function openTimelineFiltered({ activeTag = null, milestoneFilter = false, albumFilter = null } = {}) {
+  appState.activeTag = activeTag;
+  appState.milestoneFilter = milestoneFilter;
+  appState.albumFilter = albumFilter;
+  switchTab('timeline');
+  render();
 }
 
 function passesSearchFilter(memory) {
@@ -1176,14 +1288,16 @@ function renderTimelineChips() {
     timelineChipsEl.appendChild(li);
   };
 
-  makeChip('Всички', !appState.activeTag && !appState.milestoneFilter, () => {
+  makeChip('Всички', !appState.activeTag && !appState.milestoneFilter && !appState.albumFilter, () => {
     appState.activeTag = null;
     appState.milestoneFilter = false;
+    appState.albumFilter = null;
     render();
   });
 
   makeChip('Забележителни', appState.milestoneFilter, () => {
     appState.milestoneFilter = !appState.milestoneFilter;
+    appState.albumFilter = null;
     render();
   });
 
@@ -1195,6 +1309,7 @@ function renderTimelineChips() {
     const isActive = appState.activeTag && appState.activeTag.type === entry.type && appState.activeTag.value === entry.value;
     makeChip(entry.value, isActive, () => {
       appState.activeTag = isActive ? null : entry;
+      appState.albumFilter = null;
       render();
     });
   });
@@ -1207,6 +1322,7 @@ function renderTimeline() {
     .sort((a, b) => toEventDateTimestamp(a) - toEventDateTimestamp(b))
     .filter(passesTagFilter)
     .filter(passesMilestoneFilter)
+    .filter(passesAlbumFilter)
     .filter(passesSearchFilter);
   let lastGroup = '';
 
@@ -1410,6 +1526,8 @@ function render() {
   renderPeople();
   renderPersonDetail();
   renderTags();
+  renderAlbums();
+  renderProfile();
   renderLocationPins();
   renderMapPins();
   renderPickerSavedPins();
@@ -2248,6 +2366,11 @@ document.querySelectorAll('.quick-nav-item').forEach((btn) => {
     switchTab(btn.dataset.nav);
   });
 });
+
+document.querySelector('#profile-avatar-btn')?.addEventListener('click', () => switchTab('profile'));
+document.querySelector('#profile-back-btn')?.addEventListener('click', () => switchTab('create-memory'));
+document.querySelector('#profile-favorites-row')?.addEventListener('click', () => openTimelineFiltered({ milestoneFilter: true }));
+document.querySelector('#profile-on-this-day-row')?.addEventListener('click', () => switchTab('create-memory'));
 
 personDetailBackBtn.addEventListener('click', () => {
   appState.selectedPerson = null;

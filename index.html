@@ -56,9 +56,14 @@
       <section id="app-screen" class="screen">
 
         <header class="mobile-header">
-          <div>
-            <h2 id="welcome-text">Здравей!</h2>
-            <small class="hint">ПАМЕТ</small>
+          <div class="mobile-header-identity">
+            <button type="button" id="profile-avatar-btn" class="header-avatar" title="Профил" aria-label="Профил">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+            </button>
+            <div>
+              <h2 id="welcome-text">Здравей!</h2>
+              <small class="hint">ПАМЕТ</small>
+            </div>
           </div>
           <div class="header-actions">
             <button id="export-btn" class="ghost tiny" title="Свали всички спомени като JSON"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17V3"/><path d="m6 9 6-6 6 6"/><path d="M3 21h18"/></svg></button>
@@ -132,6 +137,10 @@
                 <button class="quick-nav-item" data-nav="map">
                   <svg class="quick-nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
                   <span>Карта</span>
+                </button>
+                <button class="quick-nav-item" data-nav="albums">
+                  <svg class="quick-nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>
+                  <span>Албуми</span>
                 </button>
               </div>
             </article>
@@ -289,6 +298,50 @@
             <h3 class="section-title">Тагове</h3>
             <p class="hint">Избери таг за свързаните спомени.</p>
             <ul id="tags-list" class="pill-list"></ul>
+          </article>
+        </section>
+
+        <!-- ── ALBUMS TAB ────────────────────────────────────────── -->
+        <section id="albums" class="tab-panel">
+          <article class="card">
+            <h3 class="section-title">Албуми</h3>
+            <p class="hint">Автоматично подредени по хора, места и дати.</p>
+            <div id="album-grid" class="album-grid"></div>
+          </article>
+        </section>
+
+        <!-- ── PROFILE TAB ───────────────────────────────────────── -->
+        <section id="profile" class="tab-panel">
+          <article class="card">
+            <div class="card-heading-with-action">
+              <h3 class="section-title">Профил</h3>
+              <button type="button" id="profile-back-btn" class="ghost tiny"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M15 18l-6-6 6-6"/></svg> Назад</button>
+            </div>
+            <div class="profile-identity">
+              <div class="profile-avatar-lg">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+              </div>
+              <div>
+                <strong id="profile-name" class="t-title"></strong>
+                <p id="profile-since" class="hint"></p>
+              </div>
+            </div>
+            <div id="profile-stats" class="stats"></div>
+          </article>
+
+          <article class="card">
+            <ul class="list-rows">
+              <li class="list-row" id="profile-favorites-row" style="cursor:pointer">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2.5 15.1 9 22 10.1 17 15.1 18.2 22 12 18.7 5.8 22 7 15.1 2 10.1 8.9 9 12 2.5"/></svg>
+                <span class="list-row__label">Любими</span>
+                <span id="profile-favorites-count" class="hint"></span>
+              </li>
+              <li class="list-row" id="profile-on-this-day-row" style="cursor:pointer">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2.5"/><path d="M4 9h16M8 3v4M16 3v4"/></svg>
+                <span class="list-row__label">На този ден</span>
+                <span id="profile-on-this-day-count" class="hint"></span>
+              </li>
+            </ul>
           </article>
         </section>
 
