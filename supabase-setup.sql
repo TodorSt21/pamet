@@ -1,6 +1,12 @@
 -- ═══════════════════════════════════════════════════════════════
 -- ПАМЕТ — Supabase Setup
 -- Run this in: Supabase Dashboard → SQL Editor → New Query
+--
+-- NOTE: Supabase stops auto-granting Data API access to new public
+-- tables on Oct 30, 2026. Every new table below gets its own explicit
+-- GRANTs right after its CREATE TABLE — do the same for any table you
+-- add later. RLS policies alone are not enough; without a GRANT the
+-- Data API can't reach the table at all.
 -- ═══════════════════════════════════════════════════════════════
 
 -- 1. MEMORIES TABLE
@@ -18,6 +24,9 @@ CREATE TABLE IF NOT EXISTS public.memories (
   created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.memories TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.memories TO service_role;
+
 -- 2. PEOPLE TABLE
 CREATE TABLE IF NOT EXISTS public.people (
   id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -27,6 +36,9 @@ CREATE TABLE IF NOT EXISTS public.people (
   created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.people TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.people TO service_role;
+
 -- 3. MEMORY MEDIA TABLE
 CREATE TABLE IF NOT EXISTS public.memory_media (
   id            UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -34,6 +46,9 @@ CREATE TABLE IF NOT EXISTS public.memory_media (
   storage_path  TEXT NOT NULL,
   position      INTEGER DEFAULT 0
 );
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.memory_media TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.memory_media TO service_role;
 
 -- 4. ROW LEVEL SECURITY
 ALTER TABLE public.memories ENABLE ROW LEVEL SECURITY;
