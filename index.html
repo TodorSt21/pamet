@@ -10,6 +10,9 @@
       html, body { overscroll-behavior: none; }
     </style>
     <link rel="apple-touch-icon" href="icons/icon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&display=swap" />
     <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3/dist/maplibre-gl.css" />
     <link rel="stylesheet" href="styles/design-system.css" />
     <link rel="stylesheet" href="styles.css" />
@@ -53,9 +56,14 @@
       <section id="app-screen" class="screen">
 
         <header class="mobile-header">
-          <div>
-            <h2 id="welcome-text">Здравей!</h2>
-            <small class="hint">ПАМЕТ</small>
+          <div class="mobile-header-identity">
+            <button type="button" id="profile-avatar-btn" class="header-avatar" title="Профил" aria-label="Профил">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+            </button>
+            <div>
+              <h2 id="welcome-text">Здравей!</h2>
+              <small class="hint">ПАМЕТ</small>
+            </div>
           </div>
           <div class="header-actions">
             <button id="export-btn" class="ghost tiny" title="Свали всички спомени като JSON"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17V3"/><path d="m6 9 6-6 6 6"/><path d="M3 21h18"/></svg></button>
@@ -130,6 +138,10 @@
                   <svg class="quick-nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
                   <span>Карта</span>
                 </button>
+                <button class="quick-nav-item" data-nav="albums">
+                  <svg class="quick-nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>
+                  <span>Албуми</span>
+                </button>
               </div>
             </article>
 
@@ -150,10 +162,10 @@
                 <h3 class="section-title">Добави спомен</h3>
                 <button type="button" id="home-form-back" class="ghost tiny"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M15 18l-6-6 6-6"/></svg> Назад</button>
               </div>
-              <form id="memory-form" class="stacked-form">
+              <form id="memory-form" class="stacked-form keepsake-form">
                 <label>
                   Заглавие <span class="required-mark">*</span>
-                  <input type="text" id="memory-title" placeholder="Кратко заглавие на спомена" required />
+                  <input type="text" id="memory-title" class="input-title" placeholder="Кратко заглавие на спомена" required />
                 </label>
 
                 <label>
@@ -189,6 +201,12 @@
                 <label>
                   Тагове за емоция
                   <input type="text" id="memory-emotion-tags" placeholder="Напр. радост, спокойствие" />
+                  <div id="memory-emotion-chips" class="chips emotion-chips"></div>
+                </label>
+
+                <label class="toggle-row">
+                  <span class="field-label">Отбележи като забележителен</span>
+                  <span id="memory-milestone-toggle" class="toggle" role="switch" aria-checked="false" tabindex="0"></span>
                 </label>
 
                 <div class="map-picker-wrap">
@@ -204,7 +222,7 @@
                   <small id="memory-pin-coords" class="hint">Няма избрани места.</small>
                 </div>
 
-                <label>
+                <label class="upload-tile">
                   Снимки / Видео <span class="field-hint">(опционално)</span>
                   <input type="file" id="memory-media" accept="image/*,video/*" multiple />
                 </label>
@@ -228,6 +246,7 @@
               <input type="search" id="timeline-search" placeholder="Търси по текст, хора, тагове…" autocomplete="off" />
               <button type="button" id="timeline-search-clear" class="search-clear hidden" aria-label="Изчисти"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
             </div>
+            <ul id="timeline-chips" class="chips timeline-chips"></ul>
             <p id="active-tag-info" class="hint hidden"></p>
             <ul id="timeline-list" class="memory-list timeline-list"></ul>
           </article>
@@ -288,6 +307,50 @@
           </article>
         </section>
 
+        <!-- ── ALBUMS TAB ────────────────────────────────────────── -->
+        <section id="albums" class="tab-panel">
+          <article class="card">
+            <h3 class="section-title">Албуми</h3>
+            <p class="hint">Автоматично подредени по хора, места и дати.</p>
+            <div id="album-grid" class="album-grid"></div>
+          </article>
+        </section>
+
+        <!-- ── PROFILE TAB ───────────────────────────────────────── -->
+        <section id="profile" class="tab-panel">
+          <article class="card">
+            <div class="card-heading-with-action">
+              <h3 class="section-title">Профил</h3>
+              <button type="button" id="profile-back-btn" class="ghost tiny"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M15 18l-6-6 6-6"/></svg> Назад</button>
+            </div>
+            <div class="profile-identity">
+              <div class="profile-avatar-lg">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+              </div>
+              <div>
+                <strong id="profile-name" class="t-title"></strong>
+                <p id="profile-since" class="hint"></p>
+              </div>
+            </div>
+            <div id="profile-stats" class="stats"></div>
+          </article>
+
+          <article class="card">
+            <ul class="list-rows">
+              <li class="list-row" id="profile-favorites-row" style="cursor:pointer">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2.5 15.1 9 22 10.1 17 15.1 18.2 22 12 18.7 5.8 22 7 15.1 2 10.1 8.9 9 12 2.5"/></svg>
+                <span class="list-row__label">Любими</span>
+                <span id="profile-favorites-count" class="hint"></span>
+              </li>
+              <li class="list-row" id="profile-on-this-day-row" style="cursor:pointer">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2.5"/><path d="M4 9h16M8 3v4M16 3v4"/></svg>
+                <span class="list-row__label">На този ден</span>
+                <span id="profile-on-this-day-count" class="hint"></span>
+              </li>
+            </ul>
+          </article>
+        </section>
+
         <button id="fab-add-memory" class="fab" type="button" aria-label="Добави спомен">
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
         </button>
@@ -330,11 +393,11 @@
 
           <!-- Edit mode -->
           <div id="detail-edit" class="hidden">
-            <form id="detail-edit-form" class="stacked-form detail-edit-form">
+            <form id="detail-edit-form" class="stacked-form detail-edit-form keepsake-form">
 
               <label>
                 Заглавие <span class="required-mark">*</span>
-                <input type="text" id="edit-title" placeholder="Кратко заглавие на спомена" />
+                <input type="text" id="edit-title" class="input-title" placeholder="Кратко заглавие на спомена" />
               </label>
 
               <label>
@@ -383,6 +446,12 @@
               <label>
                 Тагове за емоция
                 <input type="text" id="edit-emotion-tags" placeholder="Напр. радост, спокойствие" />
+                <div id="edit-emotion-chips" class="chips emotion-chips"></div>
+              </label>
+
+              <label class="toggle-row">
+                <span class="field-label">Отбележи като забележителен</span>
+                <span id="edit-milestone-toggle" class="toggle" role="switch" aria-checked="false" tabindex="0"></span>
               </label>
 
               <label>
@@ -393,7 +462,7 @@
               <div class="edit-photos-section">
                 <p class="detail-section-label">Снимки <span class="field-hint">(избери корица)</span></p>
                 <div id="edit-photo-strip" class="media-preview-grid"></div>
-                <label style="margin-top:8px">
+                <label class="upload-tile" style="margin-top:8px">
                   Добави нови снимки
                   <input type="file" id="edit-media" accept="image/*" multiple />
                 </label>

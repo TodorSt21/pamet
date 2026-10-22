@@ -15,6 +15,7 @@ const panels = [...document.querySelectorAll('.tab-panel')];
 const memoryForm = document.querySelector('#memory-form');
 const peopleForm = document.querySelector('#people-form');
 const timelineList = document.querySelector('#timeline-list');
+const timelineChipsEl = document.querySelector('#timeline-chips');
 const peopleList = document.querySelector('#people-list');
 const peopleOverviewCard = document.querySelector('#people-overview-card');
 const personDetailCard = document.querySelector('#person-detail-card');
@@ -77,6 +78,11 @@ const editTags = document.querySelector('#edit-tags');
 const editActivityTags = document.querySelector('#edit-activity-tags');
 const editEmotionTags = document.querySelector('#edit-emotion-tags');
 const editNotesArea = document.querySelector('#edit-notes');
+const editMilestoneToggle = document.querySelector('#edit-milestone-toggle');
+const editEmotionChipsEl = document.querySelector('#edit-emotion-chips');
+const memoryMilestoneToggle = document.querySelector('#memory-milestone-toggle');
+const memoryEmotionChipsEl = document.querySelector('#memory-emotion-chips');
+const memoryEmotionTagsInput = document.querySelector('#memory-emotion-tags');
 const editTitleInput = document.querySelector('#edit-title');
 const editPhotoStripEl = document.querySelector('#edit-photo-strip');
 const editMediaInput = document.querySelector('#edit-media');
@@ -141,6 +147,8 @@ let appState = {
   memories: [],
   people: [],
   activeTag: null,
+  milestoneFilter: false,
+  albumFilter: null,
   locationFields: [emptyLocationField()],
   activeLocationIndex: 0,
   selectedPerson: null,
@@ -199,6 +207,7 @@ function mapMemory(row) {
     notes: row.notes || '',
     pins: normalizePins(row.pin),
     tags: normalizeTagGroups(row.tags),
+    isMilestone: Boolean(row.is_milestone),
     mediaDataUrls: media.map((m) => memPhotoUrl(m.storage_path)),
     mediaPaths: media.map((m) => m.storage_path),
     mediaCount: media.length,
@@ -468,6 +477,54 @@ function parseTagInput(raw) {
   return [...new Set(raw.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean))];
 }
 
+// ── Milestone toggle + "How did it feel?" emotion chips (Step 6) ──────
+
+function setToggleState(toggleEl, isOn) {
+  if (!toggleEl) return;
+  toggleEl.classList.toggle('is-on', isOn);
+  toggleEl.setAttribute('aria-checked', String(isOn));
+}
+
+function wireToggle(toggleEl) {
+  if (!toggleEl) return;
+  const flip = () => setToggleState(toggleEl, !toggleEl.classList.contains('is-on'));
+  toggleEl.addEventListener('click', flip);
+  toggleEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); }
+  });
+}
+
+const EMOTION_CHIP_LABELS = ['Горд', 'Благодарен', 'Радостен', 'Носталгичен'];
+
+function renderEmotionChips(inputEl, chipsEl) {
+  if (!chipsEl || !inputEl) return;
+  chipsEl.innerHTML = '';
+  const current = parseTagInput(inputEl.value);
+  EMOTION_CHIP_LABELS.forEach((label) => {
+    const key = label.toLowerCase();
+    const li = document.createElement('li');
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'chip' + (current.includes(key) ? ' is-active' : '');
+    btn.textContent = label;
+    btn.addEventListener('click', () => {
+      const values = parseTagInput(inputEl.value);
+      const idx = values.indexOf(key);
+      if (idx === -1) values.push(key); else values.splice(idx, 1);
+      inputEl.value = values.join(', ');
+      renderEmotionChips(inputEl, chipsEl);
+    });
+    li.appendChild(btn);
+    chipsEl.appendChild(li);
+  });
+}
+
+wireToggle(memoryMilestoneToggle);
+wireToggle(editMilestoneToggle);
+renderEmotionChips(memoryEmotionTagsInput, memoryEmotionChipsEl);
+memoryEmotionTagsInput?.addEventListener('input', () => renderEmotionChips(memoryEmotionTagsInput, memoryEmotionChipsEl));
+editEmotionTags?.addEventListener('input', () => renderEmotionChips(editEmotionTags, editEmotionChipsEl));
+
 function parsePeople(raw) {
   return [...new Set((raw || '').split(',').map((s) => s.trim()).filter(Boolean))];
 }
@@ -505,11 +562,40 @@ function formatEventDate(dateValue) {
 }
 
 
+// Mirrors the --ph-* gradient tokens in styles/design-system.css (a data-URI
+// SVG can't read the host page's CSS variables, so the stops are duplicated
+// here) to give photo-less memories a varied warm placeholder instead of
+// always the same teal swatch.
+const PH_GRADIENTS = [
+  ['f1e4d0', 'e0c39d'], // sand
+  ['cfe9e4', '82c6ba'], // sea
+  ['f1dcd4', 'd8aea4'], // rose
+  ['a6c4d8', '7fa6c0'], // sky
+  ['e3dcec', 'b8aacf'], // lilac
+  ['dfe7d3', 'b4c79b'], // sage
+];
+
+function hashString(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
 function getMemoryCover(memory) {
   if (memory.mediaDataUrls && memory.mediaDataUrls.length > 0) return memory.mediaDataUrls[0];
   const personPhoto = memory.persons.length ? getPersonPhoto(memory.persons[0]) : '';
   if (personPhoto) return personPhoto;
-  return 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="460"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="%233ECab8"/><stop offset="1" stop-color="%232BB0A0"/></linearGradient></defs><rect width="100%25" height="100%25" fill="url(%23g)"/><text x="50%25" y="52%25" font-size="42" text-anchor="middle" fill="white" font-family="DM Sans,Arial,sans-serif">Памет</text></svg>';
+  const [from, to] = PH_GRADIENTS[hashString(String(memory.createdAt || memory.text || '')) % PH_GRADIENTS.length];
+  return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="460"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="%23${from}"/><stop offset="1" stop-color="%23${to}"/></linearGradient></defs><rect width="100%25" height="100%25" fill="url(%23g)"/></svg>`;
+}
+
+// Adds the gold "Забележителен" badge over a cloned memory-card's photo.
+function addMilestoneBadge(cardFragmentOrEl, memory) {
+  if (!memory.isMilestone) return;
+  const badge = document.createElement('span');
+  badge.className = 'milestone-badge';
+  badge.innerHTML = `${ICON.star} Забележителен`;
+  cardFragmentOrEl.querySelector('.memory-photo')?.insertAdjacentElement('afterend', badge);
 }
 
 function toEventDateTimestamp(memory) {
@@ -583,6 +669,7 @@ function renderHomeSummary() {
       clone.querySelector('.memory-photo').src = getMemoryCover(memory);
       clone.querySelector('.event-date').textContent = formatEventDate(memory.eventDate);
       clone.querySelector('.text').textContent = memory.title || memory.text;
+      addMilestoneBadge(clone, memory);
 
       const locationEl = clone.querySelector('.location');
       if (memory.location) locationEl.innerHTML = `${ICON.pin} ${escHtml(memory.location)}`;
@@ -613,18 +700,24 @@ function yearsAgoLabel(years) {
   return `преди ${years} години`;
 }
 
-function renderOnThisDay() {
-  if (!onThisDayBody) return;
-
+// Shared by the home "На този ден" card and the Profile screen's
+// "На този ден" row, so both reuse the exact same matching logic.
+function getOnThisDayMatches() {
   const today = new Date();
   const todayMonth = today.getMonth();
   const todayDay = today.getDate();
   const thisYear = today.getFullYear();
 
-  const matches = appState.memories.filter((memory) => {
+  return appState.memories.filter((memory) => {
     const d = new Date(memory.eventDate);
     return d.getMonth() === todayMonth && d.getDate() === todayDay && d.getFullYear() < thisYear;
   }).sort((a, b) => toEventDateTimestamp(b) - toEventDateTimestamp(a));
+}
+
+function renderOnThisDay() {
+  if (!onThisDayBody) return;
+
+  const matches = getOnThisDayMatches();
 
   onThisDayBody.innerHTML = '';
 
@@ -986,6 +1079,99 @@ function groupPinsByPlace() {
   return [...groups.values()].sort((a, b) => b.count - a.count);
 }
 
+// ── Albums (Step 4) — derived purely from existing tags/dates/people,
+// no new table. Each album carries a `test(memory)` predicate reused
+// both to count members and to filter the timeline when opened.
+function computeAlbums() {
+  const thisYear = new Date().getFullYear();
+
+  const isTravel = (m) => m.tags.general.includes('пътуване') || Boolean(m.location) || m.pins.length > 0;
+  const isFamily = (m) => m.persons.length > 0;
+  const isMilestone = (m) => Boolean(m.isMilestone);
+  const isThisYear = (m) => new Date(m.eventDate).getFullYear() === thisYear;
+  const isEveryday = (m) => !isMilestone(m) && !isFamily(m) && !isTravel(m);
+
+  const defs = [
+    { key: 'family', name: 'Семейство', test: isFamily },
+    { key: 'travels', name: 'Пътувания', test: isTravel },
+    { key: 'milestones', name: 'Забележителни', test: isMilestone },
+    { key: 'everyday', name: 'Всекидневие', test: isEveryday },
+    { key: 'this-year', name: `Тази година (${thisYear})`, test: isThisYear },
+  ];
+
+  return defs.map((def) => {
+    const members = appState.memories.filter(def.test);
+    return { ...def, count: members.length, cover: members[0] ? getMemoryCover(members[0]) : null };
+  });
+}
+
+function renderAlbums() {
+  const grid = document.querySelector('#album-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  computeAlbums().forEach((album) => {
+    const card = document.createElement('div');
+    card.className = 'album-card';
+
+    const cover = document.createElement('div');
+    cover.className = 'album__cover';
+    cover.style.background = album.cover ? `url('${album.cover}') center/cover` : 'var(--ph-stripe), var(--ph-lilac)';
+
+    const name = document.createElement('p');
+    name.className = 'album__name';
+    name.textContent = album.name;
+
+    const count = document.createElement('p');
+    count.className = 'album__count';
+    count.textContent = `${album.count} ${pluralMemories(album.count)}`;
+
+    card.append(cover, name, count);
+    card.addEventListener('click', () => {
+      openTimelineFiltered(
+        album.key === 'milestones'
+          ? { milestoneFilter: true }
+          : { albumFilter: { key: album.key, test: album.test } },
+      );
+    });
+    grid.appendChild(card);
+  });
+}
+
+function renderProfile() {
+  const nameEl = document.querySelector('#profile-name');
+  if (!nameEl) return;
+
+  nameEl.textContent = appState.user ? appState.user.split('@')[0] : 'Приятел';
+
+  const years = appState.memories.map((m) => new Date(m.eventDate).getFullYear()).filter(Number.isFinite);
+  const sinceYear = years.length ? Math.min(...years) : new Date().getFullYear();
+  document.querySelector('#profile-since').textContent = `Помни от ${sinceYear}`;
+
+  const uniquePeople = new Set(appState.people.map((p) => p.name.trim().toLowerCase()).filter(Boolean));
+  appState.memories.forEach((m) => m.persons.forEach((name) => uniquePeople.add(name.trim().toLowerCase())));
+  const uniquePlaces = new Set(groupPinsByPlace().map((p) => p.name.toLowerCase()));
+  const uniqueYears = new Set(years);
+
+  const statsEl = document.querySelector('#profile-stats');
+  statsEl.innerHTML = '';
+  [
+    ['Спомени', appState.memories.length],
+    ['Хора', uniquePeople.size],
+    ['Места', uniquePlaces.size],
+    ['Години', uniqueYears.size],
+  ].forEach(([label, value]) => {
+    const stat = document.createElement('div');
+    stat.className = 'stat';
+    stat.innerHTML = `<div class="stat__value">${value}</div><div class="stat__label">${escHtml(label)}</div>`;
+    statsEl.appendChild(stat);
+  });
+
+  const milestoneCount = appState.memories.filter((m) => m.isMilestone).length;
+  document.querySelector('#profile-favorites-count').textContent = `${milestoneCount}`;
+  document.querySelector('#profile-on-this-day-count').textContent = `${getOnThisDayMatches().length}`;
+}
+
 function renderMapPins() {
   mapPinsList.innerHTML = '';
   const flatPins = appState.memories.flatMap((memory) => memory.pins.map((pin) => ({ memory, pin })));
@@ -1055,6 +1241,22 @@ function passesTagFilter(memory) {
   if (!appState.activeTag) return true;
   if (appState.activeTag.type === 'item') return memory.items.includes(appState.activeTag.value);
   return memory.tags[appState.activeTag.type].includes(appState.activeTag.value);
+}
+
+function passesMilestoneFilter(memory) {
+  return !appState.milestoneFilter || memory.isMilestone;
+}
+
+function passesAlbumFilter(memory) {
+  return !appState.albumFilter || appState.albumFilter.test(memory);
+}
+
+function openTimelineFiltered({ activeTag = null, milestoneFilter = false, albumFilter = null } = {}) {
+  appState.activeTag = activeTag;
+  appState.milestoneFilter = milestoneFilter;
+  appState.albumFilter = albumFilter;
+  switchTab('timeline');
+  render();
 }
 
 function passesSearchFilter(memory) {
@@ -1135,11 +1337,56 @@ function renderPersonDetail() {
   }
 }
 
+function renderTimelineChips() {
+  if (!timelineChipsEl) return;
+  timelineChipsEl.innerHTML = '';
+
+  const makeChip = (label, isActive, onClick) => {
+    const li = document.createElement('li');
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'chip' + (isActive ? ' is-active' : '');
+    btn.textContent = label;
+    btn.addEventListener('click', onClick);
+    li.appendChild(btn);
+    timelineChipsEl.appendChild(li);
+  };
+
+  makeChip('Всички', !appState.activeTag && !appState.milestoneFilter && !appState.albumFilter, () => {
+    appState.activeTag = null;
+    appState.milestoneFilter = false;
+    appState.albumFilter = null;
+    render();
+  });
+
+  makeChip('Забележителни', appState.milestoneFilter, () => {
+    appState.milestoneFilter = !appState.milestoneFilter;
+    appState.albumFilter = null;
+    render();
+  });
+
+  const seen = new Set();
+  appState.memories.flatMap(buildTagEntries).forEach((entry) => {
+    const key = `${entry.type}:${entry.value}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    const isActive = appState.activeTag && appState.activeTag.type === entry.type && appState.activeTag.value === entry.value;
+    makeChip(entry.value, isActive, () => {
+      appState.activeTag = isActive ? null : entry;
+      appState.albumFilter = null;
+      render();
+    });
+  });
+}
+
 function renderTimeline() {
+  renderTimelineChips();
   timelineList.innerHTML = '';
   const sortedMemories = [...appState.memories]
     .sort((a, b) => toEventDateTimestamp(a) - toEventDateTimestamp(b))
     .filter(passesTagFilter)
+    .filter(passesMilestoneFilter)
+    .filter(passesAlbumFilter)
     .filter(passesSearchFilter);
   let lastGroup = '';
 
@@ -1147,7 +1394,7 @@ function renderTimeline() {
     const currentGroup = monthLabel(memory.eventDate);
     if (currentGroup != lastGroup) {
       const groupLabel = document.createElement('li');
-      groupLabel.className = 'timeline-group-label';
+      groupLabel.className = 'timeline-group-label t-eyebrow';
       groupLabel.textContent = currentGroup;
       timelineList.appendChild(groupLabel);
       lastGroup = currentGroup;
@@ -1157,6 +1404,8 @@ function renderTimeline() {
     clone.querySelector('.memory-photo').src = getMemoryCover(memory);
     clone.querySelector('.event-date').textContent = `🗓️ ${formatEventDate(memory.eventDate)}`;
     clone.querySelector('.text').textContent = memory.title || memory.text;
+
+    addMilestoneBadge(clone, memory);
 
     const locationEl = clone.querySelector('.location');
     if (memory.location) locationEl.innerHTML = `${ICON.pin} ${escHtml(memory.location)}`;
@@ -1203,7 +1452,18 @@ function renderTimeline() {
       openMemoryDetail(memory.createdAt);
     });
 
-    timelineList.appendChild(clone);
+    const row = document.createElement('li');
+    row.className = 'timeline-row';
+    const rail = document.createElement('div');
+    rail.className = 'timeline-rail';
+    const dot = document.createElement('span');
+    dot.className = 'timeline-dot' + (memory.isMilestone ? ' timeline-dot--milestone' : '');
+    const line = document.createElement('span');
+    line.className = 'timeline-line';
+    rail.append(dot, line);
+    row.appendChild(rail);
+    row.appendChild(cardItem);
+    timelineList.appendChild(row);
   });
 
   if (!sortedMemories.length) {
@@ -1325,6 +1585,8 @@ function render() {
   renderPeople();
   renderPersonDetail();
   renderTags();
+  renderAlbums();
+  renderProfile();
   renderLocationPins();
   renderMapPins();
   renderPickerSavedPins();
@@ -1743,6 +2005,8 @@ function enterEditMode() {
   editActivityTags.value = (memory.tags?.activity || []).join(', ');
   editEmotionTags.value = (memory.tags?.emotion || []).join(', ');
   editNotesArea.value = memory.notes || '';
+  setToggleState(editMilestoneToggle, Boolean(memory.isMilestone));
+  renderEmotionChips(editEmotionTags, editEmotionChipsEl);
 
   // Restore location fields from memory.pins
   editLocationFields = (memory.pins && memory.pins.length)
@@ -1833,6 +2097,7 @@ detailEditForm.addEventListener('submit', async (event) => {
     activity: parseTagInput(editActivityTags.value),
     emotion: parseTagInput(editEmotionTags.value),
   };
+  const newIsMilestone = Boolean(editMilestoneToggle?.classList.contains('is-on'));
 
   // Update memory row in Supabase
   const { error: updateError } = await sb.from('memories').update({
@@ -1845,6 +2110,7 @@ detailEditForm.addEventListener('submit', async (event) => {
     notes: newNotes,
     pin: editPinsForSave.length ? editPinsForSave : null,
     tags: newTags,
+    is_milestone: newIsMilestone,
   }).eq('id', memoryId).eq('user_id', appState.userId);
 
   if (updateError) {
@@ -1910,6 +2176,7 @@ detailEditForm.addEventListener('submit', async (event) => {
       notes: newNotes,
       pin: editPinsForSave.length ? editPinsForSave : null,
       tags: newTags,
+      is_milestone: newIsMilestone,
       memory_media: finalMedia,
     });
   }
@@ -2164,6 +2431,11 @@ document.querySelectorAll('.quick-nav-item').forEach((btn) => {
   });
 });
 
+document.querySelector('#profile-avatar-btn')?.addEventListener('click', () => switchTab('profile'));
+document.querySelector('#profile-back-btn')?.addEventListener('click', () => switchTab('create-memory'));
+document.querySelector('#profile-favorites-row')?.addEventListener('click', () => openTimelineFiltered({ milestoneFilter: true }));
+document.querySelector('#profile-on-this-day-row')?.addEventListener('click', () => switchTab('create-memory'));
+
 personDetailBackBtn.addEventListener('click', () => {
   appState.selectedPerson = null;
   renderPersonDetail();
@@ -2264,6 +2536,7 @@ memoryForm.addEventListener('submit', async (event) => {
     notes: '',
     tags: { general: generalTags, activity: activityTags, emotion: emotionTags },
     pin: locationPinsForSave.length ? locationPinsForSave : null,
+    is_milestone: Boolean(memoryMilestoneToggle?.classList.contains('is-on')),
   }).select().single();
 
   if (error) {
@@ -2301,6 +2574,8 @@ memoryForm.addEventListener('submit', async (event) => {
   if (document.querySelector('#memory-title')) document.querySelector('#memory-title').value = '';
   renderMediaPreview();
   document.querySelector('#memory-event-date').value = new Date().toISOString().slice(0, 10);
+  setToggleState(memoryMilestoneToggle, false);
+  renderEmotionChips(memoryEmotionTagsInput, memoryEmotionChipsEl);
   submitBtn.disabled = false;
   submitBtn.textContent = 'Запази спомен';
 });
