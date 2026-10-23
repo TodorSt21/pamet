@@ -1,4 +1,4 @@
-const CACHE = 'pamet-v2';
+const CACHE = 'pamet-v3';
 const STATIC = ['styles.css', 'styles/design-system.css', 'icons/icon.svg'];
 
 self.addEventListener('install', e => {
