@@ -256,9 +256,13 @@
         <section id="map" class="tab-panel">
           <article class="card">
             <h3 class="section-title">Карта на спомените</h3>
-            <p class="hint">Всички отбелязани места:</p>
+            <div class="map-search">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+              <input type="search" id="map-place-search" placeholder="Търси място…" autocomplete="off" />
+            </div>
             <div id="map-board" class="map-board"></div>
-            <ul id="map-pins-list" class="memory-list compact"></ul>
+            <p class="t-eyebrow place-list-eyebrow">Места</p>
+            <ul id="map-pins-list" class="place-list"></ul>
           </article>
         </section>
 
@@ -267,12 +271,12 @@
           <article id="people-overview-card" class="card">
             <h3 class="section-title">Хора</h3>
             <p class="hint">Добави човек и снимка (по желание).</p>
-            <form id="people-form" class="stacked-form compact-form">
+            <form id="people-form" class="stacked-form compact-form keepsake-form">
               <label>
                 Име
-                <input type="text" id="people-name" placeholder="Напр. Мария" required />
+                <input type="text" id="people-name" class="input-title" placeholder="Напр. Мария" required />
               </label>
-              <label>
+              <label class="upload-tile">
                 Снимка
                 <input type="file" id="people-photo" accept="image/*" />
               </label>
@@ -290,10 +294,10 @@
               <img id="person-detail-avatar" class="person-avatar large" alt="" />
               <div>
                 <strong id="person-detail-name"></strong>
-                <p id="person-detail-meta" class="hint"></p>
               </div>
             </div>
-            <h4>Свързани спомени</h4>
+            <div id="person-detail-stats" class="person-detail-stats"></div>
+            <p class="t-eyebrow">Свързани спомени</p>
             <ul id="person-detail-memories" class="memory-list compact"></ul>
           </article>
         </section>
