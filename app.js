@@ -22,10 +22,11 @@ const personDetailCard = document.querySelector('#person-detail-card');
 const personDetailBackBtn = document.querySelector('#person-detail-back');
 const personDetailAvatar = document.querySelector('#person-detail-avatar');
 const personDetailName = document.querySelector('#person-detail-name');
-const personDetailMeta = document.querySelector('#person-detail-meta');
 const personDetailMemories = document.querySelector('#person-detail-memories');
 const tagsList = document.querySelector('#tags-list');
 const mapPinsList = document.querySelector('#map-pins-list');
+const mapPlaceSearchInput = document.querySelector('#map-place-search');
+let placeSearchQuery = '';
 const memoryTemplate = document.querySelector('#memory-item-template');
 const activeTagInfo = document.querySelector('#active-tag-info');
 const clearTagFilterBtn = document.querySelector('#clear-tag-filter');
@@ -566,6 +567,13 @@ function formatEventDate(dateValue) {
   return new Date(dateValue).toLocaleDateString('bg-BG');
 }
 
+function formatYearRange(firstTs, lastTs) {
+  if (!firstTs || !lastTs) return '';
+  const firstYear = new Date(firstTs).getFullYear();
+  const lastYear = new Date(lastTs).getFullYear();
+  return firstYear === lastYear ? String(firstYear) : `${firstYear}–${lastYear}`;
+}
+
 
 // Mirrors the --ph-* gradient tokens in styles/design-system.css (a data-URI
 // SVG can't read the host page's CSS variables, so the stops are duplicated
@@ -1078,10 +1086,23 @@ function groupPinsByPlace() {
     const name = (pin.name || memory.location || '').trim();
     if (!name) return;
     const key = name.toLowerCase();
-    if (!groups.has(key)) groups.set(key, { name, count: 0, memory });
-    groups.get(key).count += 1;
+    if (!groups.has(key)) groups.set(key, { name, count: 0, memory, memories: [] });
+    const group = groups.get(key);
+    group.count += 1;
+    group.memories.push(memory);
   });
-  return [...groups.values()].sort((a, b) => b.count - a.count);
+  return [...groups.values()]
+    .map((group) => {
+      const dates = group.memories.map((m) => toEventDateTimestamp(m)).filter(Boolean);
+      const cover = group.memories.find((m) => m.mediaDataUrls?.length) || group.memories[0];
+      return {
+        ...group,
+        cover: cover ? getMemoryCover(cover) : null,
+        firstDate: dates.length ? Math.min(...dates) : null,
+        lastDate: dates.length ? Math.max(...dates) : null,
+      };
+    })
+    .sort((a, b) => b.count - a.count);
 }
 
 // ── Albums (Step 4) — derived purely from existing tags/dates/people,
@@ -1225,11 +1246,30 @@ function renderMapPins() {
     });
   }
 
-  groupPinsByPlace().forEach(({ name, count, memory }) => {
+  const q = placeSearchQuery.trim().toLowerCase();
+  const places = groupPinsByPlace().filter((place) => !q || place.name.toLowerCase().includes(q));
+
+  places.forEach(({ name, count, memory, cover, firstDate, lastDate }) => {
     const li = document.createElement('li');
-    li.className = 'memory-item';
+    li.className = 'place-card';
     li.style.cursor = 'pointer';
-    li.innerHTML = `${ICON.pin} ${escHtml(name)} · ${count} ${pluralMemories(count)}`;
+
+    const thumb = document.createElement('div');
+    thumb.className = 'place-card__thumb';
+    thumb.style.background = cover ? `url('${cover}') center/cover` : 'var(--ph-stripe), var(--ph-lilac)';
+
+    const text = document.createElement('div');
+    text.className = 'place-card__text';
+    const title = document.createElement('p');
+    title.className = 'place-card__name';
+    title.textContent = name;
+    const meta = document.createElement('p');
+    meta.className = 'place-card__meta';
+    const yearRange = formatYearRange(firstDate, lastDate);
+    meta.textContent = `${count} ${pluralMemories(count)}${yearRange ? ' · ' + yearRange : ''}`;
+    text.append(title, meta);
+
+    li.append(thumb, text);
     li.addEventListener('click', () => openMemoryDetail(memory.createdAt, 'map'));
     mapPinsList.appendChild(li);
   });
@@ -1238,6 +1278,11 @@ function renderMapPins() {
     const li = document.createElement('li');
     li.className = 'empty-state';
     li.textContent = 'Все още няма добавени пинове.';
+    mapPinsList.appendChild(li);
+  } else if (!places.length) {
+    const li = document.createElement('li');
+    li.className = 'empty-state';
+    li.textContent = `Няма резултати за „${placeSearchQuery}".`;
     mapPinsList.appendChild(li);
   }
 }
@@ -1316,7 +1361,26 @@ function renderPersonDetail() {
     'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="100%25" height="100%25" fill="%23dfe8ff"/><circle cx="40" cy="30" r="12" fill="none" stroke="%238A8278" stroke-width="3"/><path d="M14 66c0-13 13-20 26-20s26 7 26 20" fill="none" stroke="%238A8278" stroke-width="3" stroke-linecap="round"/></svg>';
   personDetailAvatar.alt = `Снимка на ${selectedName}`;
   personDetailName.textContent = selectedName;
-  personDetailMeta.textContent = `Общо спомени: ${relatedMemories.length}`;
+
+  const places = new Set(relatedMemories.flatMap((m) => m.pins.map((p) => p.name).filter(Boolean)).concat(relatedMemories.map((m) => m.location).filter(Boolean)));
+  const years = relatedMemories.map((m) => new Date(m.eventDate).getFullYear()).filter(Number.isFinite);
+  const minYear = years.length ? Math.min(...years) : null;
+  const maxYear = years.length ? Math.max(...years) : null;
+  const yearRange = minYear === null ? '—' : minYear === maxYear ? String(minYear) : `${minYear}–${maxYear}`;
+  const statsEl = document.querySelector('#person-detail-stats');
+  if (statsEl) {
+    statsEl.innerHTML = '';
+    [
+      ['Спомени', relatedMemories.length],
+      ['Места', places.size],
+      ['Години', yearRange],
+    ].forEach(([label, value]) => {
+      const stat = document.createElement('div');
+      stat.className = 'stat';
+      stat.innerHTML = `<div class="stat__value">${escHtml(String(value))}</div><div class="stat__label">${escHtml(label)}</div>`;
+      statsEl.appendChild(stat);
+    });
+  }
 
   personDetailMemories.innerHTML = '';
   relatedMemories.forEach((memory) => {
@@ -1503,13 +1567,20 @@ function renderPeople() {
     img.src = photo || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="100%25" height="100%25" fill="%23dfe8ff"/><circle cx="40" cy="30" r="12" fill="none" stroke="%238A8278" stroke-width="3"/><path d="M14 66c0-13 13-20 26-20s26 7 26 20" fill="none" stroke="%238A8278" stroke-width="3" stroke-linecap="round"/></svg>';
     img.alt = `Снимка на ${name}`;
 
+    const text = document.createElement('div');
+    text.className = 'person-card__text';
     const caption = document.createElement('span');
+    caption.className = 'person-card__name';
     caption.textContent = name;
-
     const memoryCount = document.createElement('small');
     memoryCount.textContent = `${getMemoriesForPerson(name).length} спомена`;
+    text.append(caption, memoryCount);
 
-    li.append(img, caption, memoryCount);
+    const chevron = document.createElement('span');
+    chevron.className = 'person-card__chevron';
+    chevron.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>';
+
+    li.append(img, text, chevron);
 
     const inDb = appState.people.find((p) => p.name.trim().toLowerCase() === name.trim().toLowerCase());
     if (inDb) {
@@ -1525,7 +1596,7 @@ function renderPeople() {
         await deletePersonByName(name);
         renderPeople();
       });
-      li.appendChild(delBtn);
+      li.insertBefore(delBtn, chevron);
     }
     li.addEventListener('click', () => openPersonDetail(name));
     li.addEventListener('keydown', (event) => {
@@ -2414,6 +2485,11 @@ timelineSearchInput.addEventListener('input', () => {
   searchQuery = timelineSearchInput.value.trim();
   timelineSearchClear.classList.toggle('hidden', !searchQuery);
   renderTimeline();
+});
+
+mapPlaceSearchInput?.addEventListener('input', () => {
+  placeSearchQuery = mapPlaceSearchInput.value.trim();
+  renderMapPins();
 });
 
 timelineSearchClear.addEventListener('click', () => {

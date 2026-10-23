@@ -1067,27 +1067,30 @@ button.tiny {
 /* ── PEOPLE ─────────────────────────────────────────────────────── */
 
 .people-list {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
+  gap: 2px;
   margin-top: 4px;
 }
 
 .person-card {
-  display: grid;
-  justify-items: center;
-  gap: 6px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
   background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  padding: 14px 10px;
+  border: none;
+  border-radius: 0;
+  padding: 10px 2px;
   cursor: pointer;
-  box-shadow: var(--shadow-soft);
-  transition: box-shadow 0.15s, transform 0.1s;
+  box-shadow: none;
+}
+
+.person-card + .person-card {
+  border-top: 1px solid var(--line-2);
 }
 
 .person-card:hover {
-  box-shadow: 0 6px 20px rgba(47, 182, 166, 0.18);
-  transform: translateY(-1px);
+  background: var(--teal-tint);
 }
 
 .person-card:focus-visible {
@@ -1095,22 +1098,46 @@ button.tiny {
   outline-offset: 2px;
 }
 
+.person-card__text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+
+.person-card__name {
+  font-family: var(--font-serif);
+  font-size: 1.125rem;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .person-card small {
-  color: var(--text-secondary);
-  font-size: 0.75rem;
+  color: var(--muted-2);
+  font-size: 0.78rem;
+}
+
+.person-card__chevron {
+  flex: none;
+  display: flex;
+  color: var(--muted-3);
 }
 
 .person-avatar {
-  width: 52px;
-  height: 52px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid rgba(47, 182, 166, 0.2);
+  border: none;
+  box-shadow: 0 0 0 2px #fff, 0 2px 6px -2px rgba(0, 0, 0, 0.3);
 }
 
 .person-avatar.large {
-  width: 72px;
-  height: 72px;
+  width: 92px;
+  height: 92px;
+  box-shadow: 0 0 0 4px #fff, 0 10px 24px -8px rgba(0, 0, 0, 0.3);
 }
 
 .person-detail-header {
@@ -1118,6 +1145,67 @@ button.tiny {
   gap: 14px;
   align-items: center;
   margin-bottom: 14px;
+}
+
+.person-detail-header #person-detail-name {
+  font-family: var(--font-serif);
+  font-size: 1.625rem;
+  font-weight: 500;
+  color: var(--ink);
+  display: block;
+}
+
+.person-detail-stats {
+  display: flex;
+  background: var(--teal-tint);
+  border-radius: 16px;
+  padding: 12px 6px;
+  margin-bottom: 16px;
+}
+
+.person-detail-stats .stat {
+  flex: 1;
+  text-align: center;
+}
+
+.person-detail-stats .stat + .stat {
+  border-left: 1px solid var(--line);
+}
+
+.person-detail-stats .stat__value {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  color: var(--ink);
+}
+
+.person-detail-stats .stat__label {
+  font-size: 0.62rem;
+  color: var(--muted-2);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+#person-detail-memories .memory-item {
+  padding: 10px 12px;
+  gap: 3px;
+}
+
+#person-detail-memories .memory-item strong {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--muted-2);
+}
+
+#person-detail-memories .memory-item p {
+  margin: 0;
+  font-family: var(--font-serif);
+  color: var(--ink);
+}
+
+#person-detail-memories .memory-item small {
+  color: var(--muted-2);
+  font-size: 0.78rem;
 }
 
 /* ── MAP ────────────────────────────────────────────────────────── */
@@ -1134,6 +1222,94 @@ button.tiny {
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
+}
+
+/* ── TYPE UTILITY ───────────────────────────────────────────────── */
+
+.t-eyebrow {
+  font: 600 11.5px var(--font-ui);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted-3);
+}
+
+/* ── MAP SEARCH + PLACE LIST ───────────────────────────────────── */
+
+.map-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 11px 14px;
+  margin-bottom: 12px;
+  color: var(--muted-3);
+}
+
+.map-search input[type="search"] {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 0.88rem;
+  color: var(--ink);
+}
+
+.map-search input[type="search"]:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.place-list-eyebrow {
+  margin: 16px 0 6px;
+}
+
+.place-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.place-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 8px;
+}
+
+.place-card__thumb {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background-size: cover;
+  background-position: center;
+}
+
+.place-card__text {
+  min-width: 0;
+}
+
+.place-card__name {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.place-card__meta {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: var(--muted-2);
 }
 
 .leaflet-container {
