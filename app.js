@@ -348,13 +348,17 @@ function escHtml(str) {
 }
 
 const ICON = {
-  pin: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>`,
-  bag: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7" cy="7" r="1.5" fill="currentColor" stroke="none"/></svg>`,
-  heart: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
-  target: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
-  star: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2.5 15.1 9 22 10.1 17 15.1 18.2 22 12 18.7 5.8 22 7 15.1 2 10.1 8.9 9 12 2.5"/></svg>`,
-  calendar: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2.5"/><path d="M4 9h16M8 3v4M16 3v4"/></svg>`,
-  mapPin: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>`,
+  pin: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>`,
+  bag: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7" cy="7" r="1.5" fill="currentColor" stroke="none"/></svg>`,
+  heart: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
+  target: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+  star: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2.5 15.1 9 22 10.1 17 15.1 18.2 22 12 18.7 5.8 22 7 15.1 2 10.1 8.9 9 12 2.5"/></svg>`,
+  calendar: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2.5"/><path d="M4 9h16M8 3v4M16 3v4"/></svg>`,
+  calendarSmall: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><rect x="4" y="5" width="16" height="16" rx="2.5"/><path d="M4 9h16M8 3v4M16 3v4"/></svg>`,
+  mapPin: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>`,
+  person: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>`,
+  camera: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px"><path d="M4 7h3l2-2h6l2 2h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/><circle cx="12" cy="13" r="3.2"/></svg>`,
+  lightning: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg>`,
 };
 
 // --- Core functions ---
@@ -532,8 +536,8 @@ function parsePeople(raw) {
 function buildTagEntries(memory) {
   return [
     ...memory.tags.general.map((value) => ({ type: 'general', value, label: `#${value}` })),
-    ...memory.tags.activity.map((value) => ({ type: 'activity', value, label: `🎯 ${value}`, iconHtml: ICON.target })),
-    ...memory.tags.emotion.map((value) => ({ type: 'emotion', value, label: `💛 ${value}`, iconHtml: ICON.heart })),
+    ...memory.tags.activity.map((value) => ({ type: 'activity', value, label: `#${value}`, iconHtml: ICON.target })),
+    ...memory.tags.emotion.map((value) => ({ type: 'emotion', value, label: `#${value}`, iconHtml: ICON.heart })),
   ];
 }
 
@@ -648,7 +652,7 @@ function renderHomeSummary() {
     { label: 'Спомени', value: appState.memories.length, icon: SVG('<rect x="2" y="7" width="20" height="15" rx="2.5"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><circle cx="12" cy="14" r="3"/>'), onClick: () => switchTab('timeline') },
     { label: 'Хора',    value: uniquePeople.size,         icon: SVG('<circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.5 3.1-5.5 7-5.5s7 2 7 5.5"/><circle cx="18" cy="8" r="2.5"/><path d="M22 20c0-2.5-2-4-4-4"/>'), onClick: () => switchTab('people') },
     { label: 'Места',   value: uniquePlaces.size,         icon: SVG('<path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/>'), onClick: () => switchTab('map') },
-    { label: 'Снимки',  value: photosCount,               icon: SVG('<rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>'), onClick: () => openPhotosOverlay() },
+    { label: 'Снимки',  value: photosCount,               icon: SVG('<path d="M4 7h3l2-2h6l2 2h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/><circle cx="12" cy="13" r="3.2"/>'), onClick: () => openPhotosOverlay() },
   ];
 
   statsGrid.innerHTML = '';
@@ -729,7 +733,7 @@ function renderOnThisDay() {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'btn-quick-memory';
-    btn.textContent = '⚡ Бърз спомен';
+    btn.innerHTML = `${ICON.lightning} Бърз спомен`;
     btn.addEventListener('click', openQuickMemoryModal);
     empty.append(msg, btn);
     onThisDayBody.appendChild(empty);
@@ -1308,7 +1312,7 @@ function renderPersonDetail() {
   const photo = getPersonPhoto(selectedName);
   personDetailAvatar.src =
     photo ||
-    'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="100%25" height="100%25" fill="%23dfe8ff"/><text x="50%25" y="54%25" dominant-baseline="middle" text-anchor="middle" font-size="28">👤</text></svg>';
+    'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="100%25" height="100%25" fill="%23dfe8ff"/><circle cx="40" cy="30" r="12" fill="none" stroke="%238A8278" stroke-width="3"/><path d="M14 66c0-13 13-20 26-20s26 7 26 20" fill="none" stroke="%238A8278" stroke-width="3" stroke-linecap="round"/></svg>';
   personDetailAvatar.alt = `Снимка на ${selectedName}`;
   personDetailName.textContent = selectedName;
   personDetailMeta.textContent = `Общо спомени: ${relatedMemories.length}`;
@@ -1318,7 +1322,7 @@ function renderPersonDetail() {
     const li = document.createElement('li');
     li.className = 'memory-item';
     const dateStrong = document.createElement('strong');
-    dateStrong.textContent = `🗓️ ${formatEventDate(memory.eventDate)}`;
+    dateStrong.innerHTML = `${ICON.calendarSmall} ${escHtml(formatEventDate(memory.eventDate))}`;
     const textP = document.createElement('p');
     textP.textContent = memory.text;
     const locationSmall = document.createElement('small');
@@ -1402,7 +1406,7 @@ function renderTimeline() {
 
     const clone = memoryTemplate.content.cloneNode(true);
     clone.querySelector('.memory-photo').src = getMemoryCover(memory);
-    clone.querySelector('.event-date').textContent = `🗓️ ${formatEventDate(memory.eventDate)}`;
+    clone.querySelector('.event-date').innerHTML = `${ICON.calendarSmall} ${escHtml(formatEventDate(memory.eventDate))}`;
     clone.querySelector('.text').textContent = memory.title || memory.text;
 
     addMilestoneBadge(clone, memory);
@@ -1412,7 +1416,7 @@ function renderTimeline() {
     else locationEl.remove();
 
     const personEl = clone.querySelector('.person');
-    if (memory.persons.length) personEl.textContent = `👤 ${memory.persons.join(', ')}`;
+    if (memory.persons.length) personEl.innerHTML = `${ICON.person} ${escHtml(memory.persons.join(', '))}`;
     else personEl?.remove();
 
     const itemEl = clone.querySelector('.item');
@@ -1420,7 +1424,7 @@ function renderTimeline() {
     else itemEl?.remove();
 
     const mediaEl = clone.querySelector('.media-count');
-    if (memory.mediaCount) mediaEl.textContent = `🎞️ ${memory.mediaCount} файла`;
+    if (memory.mediaCount) mediaEl.innerHTML = `${ICON.camera} ${memory.mediaCount} файла`;
     else mediaEl.remove();
 
     const tagsWrap = clone.querySelector('.memory-tags');
@@ -1495,7 +1499,7 @@ function renderPeople() {
     const img = document.createElement('img');
     img.className = 'person-avatar';
     const photo = getPersonPhoto(name);
-    img.src = photo || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="100%25" height="100%25" fill="%23dfe8ff"/><text x="50%25" y="54%25" dominant-baseline="middle" text-anchor="middle" font-size="28">👤</text></svg>';
+    img.src = photo || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="100%25" height="100%25" fill="%23dfe8ff"/><circle cx="40" cy="30" r="12" fill="none" stroke="%238A8278" stroke-width="3"/><path d="M14 66c0-13 13-20 26-20s26 7 26 20" fill="none" stroke="%238A8278" stroke-width="3" stroke-linecap="round"/></svg>';
     img.alt = `Снимка на ${name}`;
 
     const caption = document.createElement('span');
@@ -1544,7 +1548,7 @@ function renderTags() {
   tagsList.innerHTML = '';
   const seen = new Set();
   const allEntries = [
-    ...appState.memories.flatMap((m) => m.items.map((value) => ({ type: 'item', value, label: `🎒 ${value}`, iconHtml: ICON.bag }))),
+    ...appState.memories.flatMap((m) => m.items.map((value) => ({ type: 'item', value, label: `#${value}`, iconHtml: ICON.bag }))),
     ...appState.memories.flatMap(buildTagEntries),
   ];
   allEntries.forEach((entry) => {
@@ -1664,7 +1668,7 @@ function renderMemoryDetail() {
   } else {
     const placeholder = document.createElement('div');
     placeholder.className = 'detail-gallery-placeholder';
-    placeholder.textContent = '📸';
+    placeholder.innerHTML = ICON.camera;
     detailGallery.appendChild(placeholder);
   }
 
@@ -1672,7 +1676,7 @@ function renderMemoryDetail() {
   detailTitle.textContent = memory.title || memory.text;
 
   // 3. Date
-  detailDate.textContent = `🗓️ ${formatEventDate(memory.eventDate)}`;
+  detailDate.innerHTML = `${ICON.calendarSmall} ${escHtml(formatEventDate(memory.eventDate))}`;
 
   // 4–6. Location / Person / Item — show only if filled
   function setMetaRow(el, iconHtml, value) {
@@ -1702,7 +1706,7 @@ function renderMemoryDetail() {
     detailPinChipsEl.classList.add('hidden');
   }
 
-  setMetaRow(detailPersonEl, '👤', memory.persons.join(', '));
+  setMetaRow(detailPersonEl, ICON.person, memory.persons.join(', '));
   setMetaRow(detailItemEl,   ICON.bag, memory.items.join(', '));
 
   // 7. Tags as chips

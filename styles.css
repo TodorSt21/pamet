@@ -521,7 +521,7 @@ button.tiny {
 
 .stat-card small {
   font-size: 0.68rem;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.92);
   font-weight: 500;
 }
 
@@ -538,11 +538,11 @@ button.tiny {
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  background: rgba(47, 182, 166, 0.07);
-  border: 1px solid rgba(47, 182, 166, 0.18);
+  background: var(--teal-tint);
+  border: 1px solid var(--line);
   border-radius: 16px;
   padding: 14px 6px;
-  color: var(--primary);
+  color: var(--ink-2);
   font-size: 0.72rem;
   font-weight: 600;
   cursor: pointer;
@@ -809,6 +809,11 @@ button.tiny {
   gap: 4px;
 }
 
+.memory-card-body small {
+  color: var(--muted-2);
+  font-size: 0.8rem;
+}
+
 .memory-card-body strong.text {
   font-family: 'Newsreader', serif;
   font-size: 1rem;
@@ -830,20 +835,20 @@ button.tiny {
 }
 
 .tag-chip {
-  background: rgba(47, 182, 166, 0.09);
-  color: var(--primary);
-  border: 1px solid rgba(47, 182, 166, 0.25);
+  background: var(--teal-tint);
+  color: var(--ink-2);
+  border: 1px solid var(--line);
   padding: 4px 12px;
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s;
-  font-family: 'DM Sans', system-ui, sans-serif;
+  transition: border-color 0.15s;
+  font-family: var(--font-ui);
 }
 
 .tag-chip:hover {
-  background: rgba(47, 182, 166, 0.16);
+  border-color: var(--teal);
 }
 
 .on-this-day-card {
@@ -1029,20 +1034,22 @@ button.tiny {
 }
 
 .btn-delete-memory {
-  margin-top: 8px;
-  background: transparent;
-  color: #ef4444;
-  border: 1px solid #fca5a5;
-  border-radius: 8px;
-  padding: 5px 12px;
+  margin-top: 4px;
+  background: none;
+  color: #b91c1c;
+  border: none;
+  border-radius: 0;
+  padding: 2px 0;
   font-size: 0.75rem;
   font-weight: 600;
   box-shadow: none;
   align-self: flex-start;
+  text-decoration: none;
 }
 
 .btn-delete-memory:hover {
-  background: #fef2f2;
+  background: none;
+  text-decoration: underline;
 }
 
 /* ── PILLS / TAGS PAGE ──────────────────────────────────────────── */
@@ -1462,8 +1469,14 @@ button.tiny {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3rem;
+  color: #fff;
   flex-shrink: 0;
+}
+
+.detail-gallery-placeholder svg {
+  width: 48px;
+  height: 48px;
+  stroke-width: 1.4;
 }
 
 .detail-gallery-count {
@@ -1497,11 +1510,11 @@ button.tiny {
 .detail-date {
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--primary);
+  color: var(--muted-2);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   margin: 0 0 10px;
-  font-family: 'DM Sans', system-ui, sans-serif;
+  font-family: var(--font-ui);
 }
 
 .detail-meta-rows {
@@ -1791,6 +1804,7 @@ button.tiny {
   display: inline-flex;
   align-items: center;
   vertical-align: middle;
+  color: var(--teal);
 }
 
 /* ── STAT CARD HOVER ────────────────────────────────────────────── */
