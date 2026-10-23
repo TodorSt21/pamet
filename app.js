@@ -34,6 +34,7 @@ const timelineSearchClear = document.querySelector('#timeline-search-clear');
 
 let searchQuery = '';
 let detailReturnTab = 'timeline';
+let detailHistoryPushed = false;
 const statsGrid = document.querySelector('#stats-grid');
 const homeRecentList = document.querySelector('#home-recent-list');
 const onThisDayBody = document.querySelector('#on-this-day-body');
@@ -1615,10 +1616,22 @@ function openMemoryDetail(createdAt, returnTab = 'timeline') {
     document.body.style.overflow = 'hidden';
   }
 
+  // So the browser/Android Back button closes the detail instead of
+  // leaving the app or doing nothing. Guarded so opening a second memory
+  // while one is already open doesn't stack extra history entries.
+  if (!detailHistoryPushed) {
+    history.pushState({ pametDetail: true }, '');
+    detailHistoryPushed = true;
+  }
+
   requestAnimationFrame(() => initDetailStaticMap());
 }
 
-function closeMemoryDetail() {
+// Pure UI/state cleanup, with no history side effects — used both for a
+// direct close and when responding to a popstate (the history entry is
+// already being consumed by that navigation, so calling history.back()
+// again here would skip past it).
+function closeMemoryDetailUI(targetTab) {
   appState.selectedMemory = null;
 
   if (memoryDetailEl.classList.contains('map-inline')) {
@@ -1633,8 +1646,23 @@ function closeMemoryDetail() {
   }
 
   memoryDetailEl.classList.add('hidden');
-  switchTab(detailReturnTab);
+  switchTab(targetTab || detailReturnTab);
 }
+
+// User-initiated close (back button, nav tap, swipe-to-dismiss). Pops the
+// history entry pushed by openMemoryDetail, if any, before updating the UI.
+function closeMemoryDetail(targetTab) {
+  if (detailHistoryPushed) {
+    detailHistoryPushed = false;
+    history.back();
+  }
+  closeMemoryDetailUI(targetTab);
+}
+
+window.addEventListener('popstate', () => {
+  detailHistoryPushed = false;
+  if (appState.selectedMemory) closeMemoryDetailUI();
+});
 
 function renderMemoryDetail() {
   const memory = appState.memories.find((m) => m.createdAt === appState.selectedMemory);
@@ -2450,7 +2478,14 @@ tabButtons.forEach((btn) =>
     if (btn.dataset.tab !== 'people') {
       appState.selectedPerson = null;
     }
-    switchTab(btn.dataset.tab);
+    // Tapping any nav item — including the already-active one — must
+    // close an open memory detail and land on the chosen tab, not switch
+    // tabs underneath a still-visible detail overlay.
+    if (appState.selectedMemory) {
+      closeMemoryDetail(btn.dataset.tab);
+    } else {
+      switchTab(btn.dataset.tab);
+    }
   }),
 );
 
