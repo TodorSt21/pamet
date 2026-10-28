@@ -216,6 +216,17 @@ function mapMemory(row) {
   };
 }
 
+function memorySaveErrorMessage(error) {
+  // Postgres 42703 = undefined_column; also catch PostgREST's own wording
+  // for a column the schema cache doesn't know about yet.
+  const code = error?.code || '';
+  const msg = (error?.message || '').toLowerCase();
+  if (code === '42703' || msg.includes('column') || msg.includes('schema cache')) {
+    return 'Запазването не бе успешно поради несъответствие в базата данни. Моля, презареди страницата и опитай отново.';
+  }
+  return 'Запазването не бе успешно. Моля, провери интернет връзката си и опитай отново.';
+}
+
 function mapPerson(row) {
   return {
     id: row.id,
@@ -2218,7 +2229,7 @@ detailEditForm.addEventListener('submit', async (event) => {
 
   if (updateError) {
     console.error('Memory update error:', updateError);
-    alert(`Грешка при запазване: ${updateError.message}`);
+    alert(memorySaveErrorMessage(updateError));
     return;
   }
 
@@ -2332,6 +2343,7 @@ async function importData(file) {
           notes: m.notes || '',
           pin: m.pins || m.pin || null,
           tags: m.tags || null,
+          is_milestone: Boolean(m.isMilestone),
         }).select().single();
 
         if (error || !inserted) continue;
@@ -2656,7 +2668,7 @@ memoryForm.addEventListener('submit', async (event) => {
 
   if (error) {
     console.error('Memory insert error:', error);
-    alert(`Грешка при запазване: ${error.message}`);
+    alert(memorySaveErrorMessage(error));
     submitBtn.disabled = false;
     submitBtn.textContent = 'Запази спомен';
     return;
@@ -2750,11 +2762,12 @@ quickMemoryForm.addEventListener('submit', async (event) => {
     notes: '',
     tags: { general: [], activity: [], emotion: [] },
     pin: null,
+    is_milestone: false,
   }).select().single();
 
   if (error) {
     console.error('Quick memory insert error:', error);
-    alert(`Грешка при запазване: ${error.message}`);
+    alert(memorySaveErrorMessage(error));
     submitBtn.disabled = false;
     submitBtn.textContent = 'Запази';
     return;
