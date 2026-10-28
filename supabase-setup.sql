@@ -3,10 +3,10 @@
 -- Run this in: Supabase Dashboard → SQL Editor → New Query
 --
 -- NOTE: Supabase stops auto-granting Data API access to new public
--- tables on Oct 30, 2026. Every new table below gets its own explicit
--- GRANTs right after its CREATE TABLE — do the same for any table you
--- add later. RLS policies alone are not enough; without a GRANT the
--- Data API can't reach the table at all.
+-- tables on Oct 30, 2026. Every table below gets its own explicit
+-- GRANT (to authenticated and service_role only, never anon) — do the
+-- same for any table you add later. RLS policies alone are not enough;
+-- without a GRANT the Data API can't reach the table at all.
 -- ═══════════════════════════════════════════════════════════════
 
 -- 1. MEMORIES TABLE
@@ -21,17 +21,14 @@ CREATE TABLE IF NOT EXISTS public.memories (
   notes       TEXT DEFAULT '',
   pin         JSONB,
   tags        JSONB DEFAULT '{"general":[],"activity":[],"emotion":[]}'::jsonb,
-  is_milestone BOOLEAN DEFAULT false,
+  is_milestone BOOLEAN NOT NULL DEFAULT false,
   created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Safe to re-run: adds the column to a memories table that already
 -- existed before is_milestone was introduced (CREATE TABLE IF NOT
 -- EXISTS above is a no-op on an existing table).
-ALTER TABLE public.memories ADD COLUMN IF NOT EXISTS is_milestone BOOLEAN DEFAULT false;
-
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.memories TO authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.memories TO service_role;
+ALTER TABLE public.memories ADD COLUMN IF NOT EXISTS is_milestone BOOLEAN NOT NULL DEFAULT false;
 
 -- 2. PEOPLE TABLE
 CREATE TABLE IF NOT EXISTS public.people (
@@ -42,9 +39,6 @@ CREATE TABLE IF NOT EXISTS public.people (
   created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.people TO authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.people TO service_role;
-
 -- 3. MEMORY MEDIA TABLE
 CREATE TABLE IF NOT EXISTS public.memory_media (
   id            UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -53,8 +47,9 @@ CREATE TABLE IF NOT EXISTS public.memory_media (
   position      INTEGER DEFAULT 0
 );
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.memory_media TO authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.memory_media TO service_role;
+-- Data API access: every new public table needs its own grants (never
+-- to anon — RLS above already scopes rows to auth.uid() = user_id).
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.memories, public.people, public.memory_media TO authenticated, service_role;
 
 -- 4. ROW LEVEL SECURITY
 ALTER TABLE public.memories ENABLE ROW LEVEL SECURITY;
